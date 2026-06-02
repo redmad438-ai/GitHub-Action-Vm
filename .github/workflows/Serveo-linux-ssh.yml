@@ -5,7 +5,7 @@ on:
 
 jobs:
   serveo:
-    runs-on: namespace-profile-test
+    runs-on: depot-ubuntu-24.04-4
 
     steps:
       # Step 1: Enable Namespace cache for /data (instant persistent cache)
