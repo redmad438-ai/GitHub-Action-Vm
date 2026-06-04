@@ -41,7 +41,13 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile $output
           Write-Output "Downloaded pinggy.exe to $output"
 
-      # Step 4: Run reverse tunnel with Pinggy (timeout 5h 45m)
+      # Step 4: Install VS Code in background
+      - name: Install VS Code in background
+        shell: cmd
+        continue-on-error: true
+        run: start /B winget install Microsoft.VisualStudioCode --silent
+
+      # Step 5: Run reverse tunnel with Pinggy (timeout 5h 45m)
       - name: Run reverse tunnel with Pinggy
         shell: pwsh
         timeout-minutes: 350
@@ -56,7 +62,7 @@ jobs:
               Start-Sleep -Seconds 10
           }
 
-      # Step 5: Save Data folder cache
+      # Step 6: Save Data folder cache
       - name: Save Data folder cache
         uses: actions/cache@v4
         continue-on-error: true
