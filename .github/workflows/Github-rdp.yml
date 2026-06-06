@@ -21,22 +21,25 @@ jobs:
           net user Administrator /active:yes
           net localgroup Administrators Administrator /add
 
-      # Install VS Code
+      # Install VS Code via direct download (avoids winget store prompt)
       - name: Install VS Code
         shell: pwsh
         continue-on-error: true
         run: |
-          winget install Microsoft.VisualStudioCode --silent --accept-package-agreements
+          $url = "https://update.code.visualstudio.com/latest/win32-x64-user/stable"
+          $output = "$env:TEMP\VSCodeSetup.exe"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Start-Process -FilePath $output -Args "/silent /mergetasks=!runcode" -Wait
 
-      # Install opencode (system-wide so all users can use it)
-      - name: Install opencode
+      # Install opencode-ai (system-wide so all users can use it)
+      - name: Install opencode-ai
         shell: pwsh
         continue-on-error: true
         run: |
           $globalDir = "C:\npm-global"
           New-Item -ItemType Directory -Force -Path $globalDir
           npm config set prefix $globalDir
-          npm install -g opencode
+          npm install -g opencode-ai
           $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
           if ($machinePath -notlike "*$globalDir*") {
             [Environment]::SetEnvironmentVariable("Path", "$machinePath;$globalDir", "Machine")
