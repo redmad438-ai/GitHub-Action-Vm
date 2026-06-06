@@ -54,7 +54,7 @@ jobs:
         continue-on-error: true
         run: |
           $url = "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe"
-          $output = "C:\Users\Rohit\pinggy.exe"
+          $output = "$env:USERPROFILE\pinggy.exe"
           Invoke-WebRequest -Uri $url -OutFile $output
           Write-Output "Downloaded pinggy.exe to $output"
 
@@ -100,13 +100,12 @@ jobs:
         timeout-minutes: 350
         continue-on-error: true
         run: |
-          $pinggy = "C:\Users\Rohit\pinggy.exe"
+          $pinggy = "$env:USERPROFILE\pinggy.exe"
           while ($true) {
               & $pinggy -p 443 -R0:127.0.0.1:3389 `
                   -o StrictHostKeyChecking=no `
                   -o ServerAliveInterval=30 `
-                  -o ServerAliveCountMax=3 `
-                  0WQ85RZeimH+tcp@free.pinggy.io
+                  0WQ85RZeimH+force+tcp@free.pinggy.io
               Start-Sleep -Seconds 10
           }
 
