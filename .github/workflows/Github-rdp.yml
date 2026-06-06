@@ -28,13 +28,6 @@ jobs:
         run: |
           winget install Microsoft.VisualStudioCode --silent --accept-package-agreements
 
-      # Install Node.js
-      - name: Install Node.js
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          winget install OpenJS.NodeJS.LTS --silent --accept-package-agreements
-
       # Install opencode
       - name: Install opencode
         shell: pwsh
