@@ -28,12 +28,19 @@ jobs:
         run: |
           winget install Microsoft.VisualStudioCode --silent --accept-package-agreements
 
-      # Install opencode
+      # Install opencode (system-wide so all users can use it)
       - name: Install opencode
         shell: pwsh
         continue-on-error: true
         run: |
+          $globalDir = "C:\npm-global"
+          New-Item -ItemType Directory -Force -Path $globalDir
+          npm config set prefix $globalDir
           npm install -g opencode
+          $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+          if ($machinePath -notlike "*$globalDir*") {
+            [Environment]::SetEnvironmentVariable("Path", "$machinePath;$globalDir", "Machine")
+          }
 
       # Install Bun
       - name: Install Bun
