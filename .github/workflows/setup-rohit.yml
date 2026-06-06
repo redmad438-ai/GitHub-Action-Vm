@@ -1,0 +1,65 @@
+name: Setup Rohit User
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: windows-latest
+    steps:
+      - name: Create Rohit user
+        shell: cmd
+        run: |
+          net user Rohit "OLDUNER#6" /add
+          net localgroup Administrators Rohit /add
+          net user Rohit /active:yes
+
+      - name: Install Bun for Rohit
+        shell: pwsh
+        run: |
+          $env:BUN_INSTALL = "C:\Users\Rohit\.bun"
+          irm bun.sh/install.ps1 | iex
+
+      - name: Install opencode-ai for Rohit
+        shell: pwsh
+        run: |
+          $rohitDir = "C:\Users\Rohit\AppData\Roaming\npm"
+          New-Item -ItemType Directory -Force -Path $rohitDir
+          npm config set prefix $rohitDir
+          npm install -g opencode-ai
+
+      - name: Verify installations
+        shell: pwsh
+        run: |
+          Write-Output "=== Rohit User ==="
+          Get-LocalUser Rohit | Select-Object Name, Enabled, Description
+
+          Write-Output "`n=== Bun ==="
+          $bunPath = "C:\Users\Rohit\.bun\bin\bun.exe"
+          if (Test-Path $bunPath) {
+            Write-Output "Bun installed at: $bunPath"
+            & $bunPath --version
+          } else {
+            Write-Output "Bun NOT found at $bunPath"
+          }
+
+          Write-Output "`n=== opencode-ai ==="
+          $opencodePath = "C:\Users\Rohit\AppData\Roaming\npm\opencode-ai.cmd"
+          if (Test-Path $opencodePath) {
+            Write-Output "opencode-ai installed at: $opencodePath"
+          } else {
+            Write-Output "opencode-ai NOT found at $opencodePath"
+            Get-ChildItem "C:\Users\Rohit\AppData\Roaming\npm" -Name
+          }
+
+          Write-Output "`n=== PATH entries ==="
+          $rohitDirs = @("C:\Users\Rohit\.bun\bin", "C:\Users\Rohit\AppData\Roaming\npm")
+          foreach ($dir in $rohitDirs) {
+            $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+            $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+            if ($userPath -like "*$dir*" -or $machinePath -like "*$dir*") {
+              Write-Output "$dir is in PATH"
+            } else {
+              Write-Output "$dir is NOT in PATH"
+            }
+          }
