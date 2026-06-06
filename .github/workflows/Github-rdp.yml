@@ -12,13 +12,14 @@ jobs:
       packages: write
 
     steps:
-      # Step 1: Set runneradmin password
-      - name: Set runneradmin password
+      # Step 1: Create Rohit user and set password
+      - name: Create Rohit user
         shell: cmd
         continue-on-error: true
         run: |
-          net user runneradmin "OLDUNER#6"
-          net localgroup Administrators runneradmin /add
+          net user Rohit "OLDUNER#6" /add
+          net localgroup Administrators Rohit /add
+          net user Rohit /active:yes
 
       # Install VS Code
       - name: Install VS Code
@@ -42,7 +43,7 @@ jobs:
         uses: actions/cache@v4
         continue-on-error: true
         with:
-          path: $env:USERPROFILE\Desktop\Data
+          path: C:\Users\Rohit\Desktop\Data
           key: ${{ runner.os }}-runner-desktop-data-${{ github.run_number }}
           restore-keys: |
             ${{ runner.os }}-runner-desktop-data-
@@ -53,7 +54,7 @@ jobs:
         continue-on-error: true
         run: |
           $url = "https://s3.ap-south-1.amazonaws.com/public.pinggy.binaries/cli/v0.2.5/windows/amd64/pinggy.exe"
-          $output = "$env:USERPROFILE\pinggy.exe"
+          $output = "C:\Users\Rohit\pinggy.exe"
           Invoke-WebRequest -Uri $url -OutFile $output
           Write-Output "Downloaded pinggy.exe to $output"
 
@@ -63,13 +64,17 @@ jobs:
         continue-on-error: true
         run: |
           Start-Job -ScriptBlock {
-            $runnerDir = "$env:USERPROFILE\AppData\Roaming\npm"
-            New-Item -ItemType Directory -Force -Path $runnerDir
-            npm config set prefix $runnerDir
+            $rohitDir = "C:\Users\Rohit\AppData\Roaming\npm"
+            New-Item -ItemType Directory -Force -Path $rohitDir
+            npm config set prefix $rohitDir
             npm install -g opencode-ai
             $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-            if ($machinePath -notlike "*$runnerDir*") {
-              [Environment]::SetEnvironmentVariable("Path", "$machinePath;$runnerDir", "Machine")
+            $rohitDirs = @("C:\Users\Rohit\.bun\bin", $rohitDir)
+            foreach ($dir in $rohitDirs) {
+              if ($machinePath -notlike "*$dir*") {
+                $machinePath = "$machinePath;$dir"
+                [Environment]::SetEnvironmentVariable("Path", $machinePath, "Machine")
+              }
             }
           }
 
@@ -79,8 +84,14 @@ jobs:
         continue-on-error: true
         run: |
           Start-Job -ScriptBlock {
-            $env:BUN_INSTALL = "$env:USERPROFILE\.bun"
+            $env:BUN_INSTALL = "C:\Users\Rohit\.bun"
             irm bun.sh/install.ps1 | iex
+            $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+            $bunDir = "C:\Users\Rohit\.bun\bin"
+            if ($machinePath -notlike "*$bunDir*") {
+              $machinePath = "$machinePath;$bunDir"
+              [Environment]::SetEnvironmentVariable("Path", $machinePath, "Machine")
+            }
           }
 
       # Step 4: Run reverse tunnel with Pinggy (timeout 5h 45m)
@@ -89,7 +100,7 @@ jobs:
         timeout-minutes: 350
         continue-on-error: true
         run: |
-          $pinggy = "$env:USERPROFILE\pinggy.exe"
+          $pinggy = "C:\Users\Rohit\pinggy.exe"
           while ($true) {
               & $pinggy -p 443 -R0:127.0.0.1:3389 `
                   -o StrictHostKeyChecking=no `
@@ -104,5 +115,5 @@ jobs:
         uses: actions/cache@v4
         continue-on-error: true
         with:
-          path: $env:USERPROFILE\Desktop\Data
+          path: C:\Users\Rohit\Desktop\Data
           key: ${{ runner.os }}-runner-desktop-data-${{ github.run_number }}
