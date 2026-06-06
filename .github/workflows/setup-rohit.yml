@@ -28,6 +28,18 @@ jobs:
           npm config set prefix $rohitDir
           npm install -g opencode-ai
 
+      - name: Add paths to machine PATH
+        shell: pwsh
+        run: |
+          $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+          $paths = @("C:\Users\Rohit\.bun\bin", "C:\Users\Rohit\AppData\Roaming\npm")
+          foreach ($dir in $paths) {
+            if ($machinePath -notlike "*$dir*") {
+              [Environment]::SetEnvironmentVariable("Path", "$machinePath;$dir", "Machine")
+              Write-Output "Added $dir to PATH"
+            }
+          }
+
       - name: Verify installations
         shell: pwsh
         run: |
@@ -44,22 +56,22 @@ jobs:
           }
 
           Write-Output "`n=== opencode-ai ==="
-          $opencodePath = "C:\Users\Rohit\AppData\Roaming\npm\opencode-ai.cmd"
+          $opencodePath = "C:\Users\Rohit\AppData\Roaming\npm\opencode.cmd"
           if (Test-Path $opencodePath) {
             Write-Output "opencode-ai installed at: $opencodePath"
+            & $opencodePath --version
           } else {
-            Write-Output "opencode-ai NOT found at $opencodePath"
+            Write-Output "opencode NOT found at $opencodePath"
             Get-ChildItem "C:\Users\Rohit\AppData\Roaming\npm" -Name
           }
 
-          Write-Output "`n=== PATH entries ==="
+          Write-Output "`n=== PATH verification ==="
           $rohitDirs = @("C:\Users\Rohit\.bun\bin", "C:\Users\Rohit\AppData\Roaming\npm")
           foreach ($dir in $rohitDirs) {
-            $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
             $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-            if ($userPath -like "*$dir*" -or $machinePath -like "*$dir*") {
-              Write-Output "$dir is in PATH"
+            if ($machinePath -like "*$dir*") {
+              Write-Output "$dir is in PATH ✅"
             } else {
-              Write-Output "$dir is NOT in PATH"
+              Write-Output "$dir is NOT in PATH ❌"
             }
           }
