@@ -21,7 +21,7 @@ jobs:
           net user Administrator /active:yes
           net localgroup Administrators Administrator /add
 
-      # Install VS Code via direct download (avoids winget store prompt)
+      # Install VS Code for Administrator user
       - name: Install VS Code
         shell: pwsh
         continue-on-error: true
@@ -29,20 +29,20 @@ jobs:
           $url = "https://update.code.visualstudio.com/latest/win32-x64-user/stable"
           $output = "$env:TEMP\VSCodeSetup.exe"
           Invoke-WebRequest -Uri $url -OutFile $output
-          Start-Process -FilePath $output -Args "/silent /mergetasks=!runcode" -Wait
+          Start-Process -FilePath $output -Args "/silent /mergetasks=!runcode /user=Administrator" -Wait
 
-      # Install opencode-ai (system-wide so all users can use it)
+      # Install opencode-ai for Administrator user
       - name: Install opencode-ai
         shell: pwsh
         continue-on-error: true
         run: |
-          $globalDir = "C:\npm-global"
-          New-Item -ItemType Directory -Force -Path $globalDir
-          npm config set prefix $globalDir
+          $adminDir = "C:\Users\Administrator\AppData\Roaming\npm"
+          New-Item -ItemType Directory -Force -Path $adminDir
+          npm config set prefix $adminDir
           npm install -g opencode-ai
           $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-          if ($machinePath -notlike "*$globalDir*") {
-            [Environment]::SetEnvironmentVariable("Path", "$machinePath;$globalDir", "Machine")
+          if ($machinePath -notlike "*$adminDir*") {
+            [Environment]::SetEnvironmentVariable("Path", "$machinePath;$adminDir", "Machine")
           }
 
       # Install Bun
