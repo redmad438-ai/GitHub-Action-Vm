@@ -14,30 +14,17 @@ jobs:
         run: |
           sudo apt-get update
 
-      - name: Install SSH and dependencies
+      - name: Install dependencies
         if: always()
         continue-on-error: true
         run: |
-          sudo apt-get install -y openssh-server sshpass tmux
+          sudo apt-get install -y curl
 
       - name: Set root password
         if: always()
         continue-on-error: true
         run: |
           echo "root:root" | sudo chpasswd
-
-      - name: Allow root login via SSH
-        if: always()
-        continue-on-error: true
-        run: |
-          sudo sed -i.bak -E 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-          sudo service ssh restart || true
-
-      - name: Start SSH service
-        if: always()
-        continue-on-error: true
-        run: |
-          sudo service ssh start || true
 
       - name: Create root home directory and data folder with permissions
         if: always()
@@ -61,25 +48,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-data-
 
-      - name: Setup SSH tunnel with localhost.run
-        if: always()
-        continue-on-error: true
-        run: |
-          # Use localhost.run instead of serveo
-          sshpass -p 'root' ssh -o StrictHostKeyChecking=no \
-            -R 80:localhost:22 \
-            localhost.run -v &
-          sleep 5
-          echo "Tunnel established at: http://localhost.run"
-
-      - name: Keep workflow alive
+      - name: Start sshx.io terminal
         if: always()
         continue-on-error: true
         timeout-minutes: 350
         run: |
-          while true; do
-            sleep 300
-          done
+          curl -sSf https://sshx.io/get | sh -s run
 
       - name: Save /root/data cache
         if: always()
