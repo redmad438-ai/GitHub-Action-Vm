@@ -1,0 +1,48 @@
+name: GitHub Hosted Runner SSH Tunnel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tunnel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Switch to rohit user
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo useradd -m -s /bin/bash rohit || echo "User already exists"
+          echo "rohit:rohit" | sudo chpasswd
+          sudo usermod -aG sudo rohit
+
+      - name: Reset root password
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "root:rohit" | sudo chpasswd
+
+      - name: Allow root login via SSH
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo sed -i.bak -E 's/^#?PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo service ssh restart || true
+
+      - name: Start SSH service
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo service ssh start || true
+
+      - name: Setup Serveo tunnel
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 350
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          
+          echo "Starting Serveo tunnel for SSH access..."
+          sshpass -p 'rohit' ssh -o StrictHostKeyChecking=no \
+            -R my-github-runner:22:localhost:22 rohit@serveo.net -v
