@@ -68,17 +68,6 @@ jobs:
         run: |
           tmux new-session -d -s tunnel "sshpass -p 'root' ssh -o StrictHostKeyChecking=no -R my-github-runner:22:localhost:22 root@serveo.net"
 
-      - name: Keep tunnel alive
-        if: always()
-        continue-on-error: true
-        run: |
-          while true; do
-            if ! tmux has-session -t tunnel 2>/dev/null; then
-              tmux new-session -d -s tunnel "sshpass -p 'root' ssh -o StrictHostKeyChecking=no -R my-github-runner:22:localhost:22 root@serveo.net"
-            fi
-            sleep 60
-          done
-
       - name: Save /root/data cache
         if: always()
         continue-on-error: true
@@ -86,4 +75,3 @@ jobs:
         with:
           path: /root/data
           key: ${{ runner.os }}-data-${{ hashFiles('**/lockfile') }}
-```
