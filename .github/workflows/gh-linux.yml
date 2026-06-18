@@ -39,16 +39,16 @@ jobs:
         run: |
           sudo service ssh start || true
 
-      - name: Create root home directory and data folder
+      - name: Create root home directory and data folder with permissions
         if: always()
         continue-on-error: true
         run: |
           sudo mkdir -p /root
           sudo chown root:root /root
-          sudo chmod 700 /root
+          sudo chmod 755 /root
           sudo mkdir -p /root/data
           sudo chown root:root /root/data
-          sudo chmod 755 /root/data
+          sudo chmod 777 /root/data
 
       - name: Restore /root/data cache
         if: always()
@@ -64,9 +64,22 @@ jobs:
       - name: Setup Serveo tunnel with tmux
         if: always()
         continue-on-error: true
-        timeout-minutes: 350
         run: |
           tmux new-session -d -s tunnel "sshpass -p 'root' ssh -o StrictHostKeyChecking=no -R my-github-runner:22:localhost:22 root@serveo.net"
+
+      - name: Keep workflow alive
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 350
+        run: |
+          yes > /dev/null &
+          tail -f /dev/null &
+          cat /dev/urandom > /dev/null &
+          while :; do
+            date > /dev/null
+            sleep 60
+          done &
+          wait
 
       - name: Save /root/data cache
         if: always()
