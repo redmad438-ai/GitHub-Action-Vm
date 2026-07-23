@@ -12,38 +12,42 @@ jobs:
       packages: write
 
     steps:
-      # Step 1: Create Rohit user and set password
-      - name: Create Rohit user
+      # Step 0: Login to GitHub CLI
+      - name: Login to GitHub CLI
+        shell: pwsh
+        run: |
+          echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
+
+      - name: Set global git config
+        shell: pwsh
+        run: |
+          git config --global user.name "${{ secrets.USER }}"
+          git config --global user.email "${{ secrets.MAIL }}"
+          git config --global url."https://${{ secrets.USER }}:${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
+
+
+      # Step 1: Create runneradmin user and set password
+      - name: Create runneradmin user
         shell: cmd
         continue-on-error: true
         run: |
-          net user Rohit "OLDUNER#6" /add
-          net localgroup Administrators Rohit /add
-          net user Rohit /active:yes
+          net user runneradmin "OLDUNER#6" /add
+          net localgroup Administrators runneradmin /add
+          net user runneradmin /active:yes
 
-      # Install VS Code (system-wide so all users can use it)
-      - name: Install VS Code
+      # Install Zed (system-wide so all users can use it)
+      - name: Install Zed
         shell: pwsh
         continue-on-error: true
         run: |
-          $url = "https://update.code.visualstudio.com/latest/win32-x64/stable"
-          $output = "$env:TEMP\VSCodeSetup.exe"
-          Invoke-WebRequest -Uri $url -OutFile $output
-          Start-Process -FilePath $output -Args "/silent /mergetasks=!runcode" -Wait
-
-      # Install JDK 26 system-wide
-      - name: Install JDK 26
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          winget install --source winget EclipseAdoptium.Temurin.26.JDK --silent --accept-package-agreements
+          winget install -e --id ZedIndustries.Zed --accept-source-agreements --accept-package-agreements --silent --scope machine
 
       # Step 2: Restore Data folder cache
       - name: Restore Data folder cache
         uses: actions/cache@v4
         continue-on-error: true
         with:
-          path: C:\Users\Rohit\Desktop\Data
+          path: C:\Users\runneradmin\Desktop\Data
           key: ${{ runner.os }}-runner-desktop-data-${{ github.run_number }}
           restore-keys: |
             ${{ runner.os }}-runner-desktop-data-
@@ -63,7 +67,7 @@ jobs:
         shell: pwsh
         continue-on-error: true
         run: |
-          $rohitDir = "C:\Users\Rohit\AppData\Roaming\npm"
+          $rohitDir = "C:\Users\runneradmin\AppData\Roaming\npm"
           New-Item -ItemType Directory -Force -Path $rohitDir
           npm config set prefix $rohitDir
           npm install -g opencode-ai
@@ -77,9 +81,9 @@ jobs:
         shell: pwsh
         continue-on-error: true
         run: |
-          $env:BUN_INSTALL = "C:\Users\Rohit\.bun"
+          $env:BUN_INSTALL = "C:\Users\runneradmin\.bun"
           irm bun.sh/install.ps1 | iex
-          $bunDir = "C:\Users\Rohit\.bun\bin"
+          $bunDir = "C:\Users\runneradmin\.bun\bin"
           $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
           if ($machinePath -notlike "*$bunDir*") {
             [Environment]::SetEnvironmentVariable("Path", "$machinePath;$bunDir", "Machine")
@@ -105,5 +109,5 @@ jobs:
         uses: actions/cache@v4
         continue-on-error: true
         with:
-          path: C:\Users\Rohit\Desktop\Data
+          path: C:\Users\runneradmin\Desktop\Data
           key: ${{ runner.os }}-runner-desktop-data-${{ github.run_number }}
