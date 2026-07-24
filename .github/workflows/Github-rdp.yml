@@ -25,15 +25,15 @@ jobs:
           git config --global user.email "${{ secrets.MAIL }}"
           git config --global url."https://${{ secrets.USER }}:${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/"
 
-
       # Step 1: Create runneradmin user and set password
       - name: Create runneradmin user
         shell: cmd
         continue-on-error: true
         run: |
-          net user runneradmin "OLDUNER#6" /add
+          net user runneradmin "OLDUNER#6" /add /passwordchg:no
           net localgroup Administrators runneradmin /add
           net user runneradmin /active:yes
+          net user runneradmin "OLDUNER#6"
 
       # Install Zed (system-wide so all users can use it)
       - name: Install Zed
